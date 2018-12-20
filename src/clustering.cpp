@@ -44,7 +44,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 
     return clusters;
 }
-
+#include <iostream>
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
 {
     // Find an uper bound for the radius
@@ -71,6 +71,8 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
         else
             max_r = mid_r;
     }
+
+    std::cout << "radius is " << max_r << std::endl;
 
     return a3_clustering(graph, k, nb_outliers, max_r);
 }
