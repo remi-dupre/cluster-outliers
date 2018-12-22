@@ -3,6 +3,7 @@
  */
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <tuple>
 #include <unordered_set>
@@ -35,8 +36,9 @@ std::unordered_set<size_t> disk(const Graph& graph, Point center, Real radius);
  * Compute the minimal and maximal distance between two distinct points in the
  * given graph. The minimal distance can't be zero.
  *
- * Time: O(n²)
+ * Time: O(n²)  #enhancable
  */
 std::pair<Real, Real> bound_dist(const Graph& graph);
+
 
 #include "space.inl"

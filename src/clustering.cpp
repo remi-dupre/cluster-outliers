@@ -1,6 +1,22 @@
 #include "clustering.hpp"
 
 
+Real cost(const Graph& graph, int outliers, const Graph& clustering)
+{
+    if (outliers >= (int) graph.size())
+        return 0;
+
+    std::vector<Real> node_cost
+        (graph.size(), std::numeric_limits<Real>::infinity());
+
+    for (Point center : clustering)
+        for (size_t x = 0 ; x < graph.size() ; x++)
+            node_cost[x] = std::min(node_cost[x], dist(graph[x], center));
+
+    std::sort(node_cost.begin(), node_cost.end());
+    return node_cost[graph.size() - outliers - 1];
+}
+
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 {
     // Compute initial disks
@@ -30,8 +46,8 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 
         const std::unordered_set<size_t> to_remove = E[mw_index];
 
-        for (size_t x : to_remove) {
-            for (size_t i = 0 ; i < graph.size() ; i++) {
+        for (size_t i = 0 ; i < graph.size() ; i++) {
+            for (size_t x : to_remove) {
                 E[i].erase(x);
                 G[i].erase(x);
             }

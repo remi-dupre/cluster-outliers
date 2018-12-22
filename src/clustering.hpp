@@ -2,9 +2,18 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 #include "space.hpp"
+
+
+/**
+ * Evaluate the cost of a solution of k-clustering with outliers.
+ *
+ * Complexity: O(kn + n ln(n))  #enhancable
+ */
+Real cost(const Graph& graph, int outliers, const Graph& clustering);
 
 
 /**
@@ -17,12 +26,14 @@
  * Try to find a k-clustering with at most nb_outliers outliers using only
  * clusters of radius at most 3*radius.
  * If there is no such clustering, return an empty graph.
+ *
  * Time: O(kn ln n) with n = graph.size()
  */
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius);
 
 /**
  * Find a 3-approximation k-clustering with at most nb_outliers outliers.
+ *
  * Time: O(kn ln n ln(max_dist/min_dist) + n²)
  */
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers);
