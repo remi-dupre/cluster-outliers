@@ -4,8 +4,8 @@
 #pragma once
 
 #include <cmath>
-#include <set>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 
@@ -25,9 +25,18 @@ typedef std::vector<Point> Graph;
 inline Real dist(Point a, Point b);
 
 /**
- * Compute the set of points of the graph withing a given disk.
+ * Compute the unordered_set of points of the graph withing a given disk.
+ *
+ * Time: O(n ln n) with n = graph.size()
  */
-std::set<size_t> disk(const Graph& graph, Point center, Real radius);
+std::unordered_set<size_t> disk(const Graph& graph, Point center, Real radius);
 
+/**
+ * Compute the minimal and maximal distance between two distinct points in the
+ * given graph. The minimal distance can't be zero.
+ *
+ * Time: O(n²)
+ */
+std::pair<Real, Real> bound_dist(const Graph& graph);
 
 #include "space.inl"

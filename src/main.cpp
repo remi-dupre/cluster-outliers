@@ -8,7 +8,7 @@
 int main()
 {
     Graph graph = read_serialized(std::cin);
-    Graph cluster = a3_clustering(graph, 100, 0);
+    Graph cluster = a3_clustering(graph, 10, 10);
 
     std::cout << cluster.size() << '\n';
 

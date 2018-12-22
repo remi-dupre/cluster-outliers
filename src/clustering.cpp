@@ -4,8 +4,8 @@
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 {
     // Compute initial disks
-    std::vector<std::set<size_t>> G(graph.size()); // disks of radius r
-    std::vector<std::set<size_t>> E(graph.size()); // disks of radius 3r
+    std::vector<std::unordered_set<size_t>> G(graph.size()); // disks of radius r
+    std::vector<std::unordered_set<size_t>> E(graph.size()); // disks of radius 3r
 
     for (size_t i = 0 ; i < graph.size() ; i++) {
         G[i] = disk(graph, graph[i], radius);
@@ -28,7 +28,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
         clusters.push_back(graph[mw_index]);
         nb_covered += E[mw_index].size();
 
-        const std::set<size_t> to_remove = E[mw_index];
+        const std::unordered_set<size_t> to_remove = E[mw_index];
 
         for (size_t x : to_remove) {
             for (size_t i = 0 ; i < graph.size() ; i++) {
@@ -44,7 +44,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 
     return clusters;
 }
-#include <iostream>
+
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
 {
     // Find an uper bound for the radius
@@ -58,11 +58,16 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
         y_max = std::max(y, y_max);
     }
 
+    const auto [min_dist, max_dist] = bound_dist(graph);
+
+    std::cerr << "Min dist is " << min_dist << std::endl;
+    std::cerr << "Max dist is " << max_dist << std::endl;
+
     Real min_r = 0;
-    Real max_r = dist({x_min, y_min}, {x_max, y_max});
+    Real max_r = max_dist;
 
     // Find a 3-approximation algorithm using a binary search
-    while (max_r - min_r > 1e-6) {
+    while (max_r - min_r >= min_dist) {
         const Real mid_r = (min_r + max_r) / 2;
         const Graph& clustering = a3_clustering(graph, k, nb_outliers, mid_r);
 
@@ -72,7 +77,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
             max_r = mid_r;
     }
 
-    std::cout << "radius is " << max_r << std::endl;
+    std::cerr << "Radius is " << max_r << std::endl;
 
     return a3_clustering(graph, k, nb_outliers, max_r);
 }
