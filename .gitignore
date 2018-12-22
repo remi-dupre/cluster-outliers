@@ -1,3 +1,6 @@
 clustering
 build/
 deps/
+callgrind.out.*
+dataset.txt
+

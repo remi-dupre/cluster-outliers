@@ -23,6 +23,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
     std::vector<std::unordered_set<size_t>> G(graph.size()); // disks of radius r
     std::vector<std::unordered_set<size_t>> E(graph.size()); // disks of radius 3r
 
+    #pragma omp parallel for
     for (size_t i = 0 ; i < graph.size() ; i++) {
         G[i] = disk(graph, graph[i], radius);
         E[i] = disk(graph, graph[i], 3*radius);
@@ -31,26 +32,47 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
     // Compute clusters
     Graph clusters;
     size_t nb_covered = 0;
+    size_t mw_index = 0;
 
-    while ((int) clusters.size() < k) {
-        // Compute cluster of max weight
-        size_t mw_index = 0;
+    #pragma omp parallel
+    {
+        while ((int) clusters.size() < k) {
+            // Compute cluster of max weight
+            size_t local_mw_index = 0;
 
-        for (size_t i = 1 ; i < graph.size() ; i++)
-            if (G[i].size() > G[mw_index].size())
-                mw_index = i;
+            #pragma omp for
+            for (size_t i = 0 ; i < graph.size() ; i++)
+                if (G[i].size() > G[local_mw_index].size())
+                    local_mw_index = i;
 
-        // Update disks
-        clusters.push_back(graph[mw_index]);
-        nb_covered += E[mw_index].size();
-
-        const std::unordered_set<size_t> to_remove = E[mw_index];
-
-        for (size_t i = 0 ; i < graph.size() ; i++) {
-            for (size_t x : to_remove) {
-                E[i].erase(x);
-                G[i].erase(x);
+            #pragma omp critical
+            {
+                if (G[local_mw_index].size() > G[mw_index].size())
+                    mw_index = local_mw_index;
+                else if (G[mw_index].size() == G[local_mw_index].size() && local_mw_index < mw_index)
+                    mw_index = local_mw_index;
             }
+
+            #pragma omp barrier
+
+            // Update disks
+            const std::unordered_set<size_t> to_remove = E[mw_index];
+
+            #pragma omp single
+            {
+                clusters.push_back(graph[mw_index]);
+                nb_covered += E[mw_index].size();
+            }
+
+            #pragma omp for
+            for (size_t i = 0 ; i < graph.size() ; i++) {
+                for (size_t x : to_remove) {
+                    E[i].erase(x);
+                    G[i].erase(x);
+                }
+            }
+
+            #pragma omp barrier
         }
     }
 
@@ -76,8 +98,8 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
 
     const auto [min_dist, max_dist] = bound_dist(graph);
 
-    std::cerr << "Min dist is " << min_dist << std::endl;
-    std::cerr << "Max dist is " << max_dist << std::endl;
+    std::cerr << "Min dist is " << min_dist << '\n';
+    std::cerr << "Max dist is " << max_dist << '\n';
 
     Real min_r = 0;
     Real max_r = max_dist;
@@ -93,7 +115,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
             max_r = mid_r;
     }
 
-    std::cerr << "Radius is " << max_r << std::endl;
+    std::cerr << "Radius is " << max_r << '\n';
 
     return a3_clustering(graph, k, nb_outliers, max_r);
 }

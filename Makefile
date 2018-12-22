@@ -2,10 +2,10 @@
 # Variables
 
 # C++ compiler name
-CXX = g++
+CXX = clang++
 
 # Compiler flags
-CFLAGS = -std=c++17
+CFLAGS = -std=c++17 -fopenmp
 
 # Debuguer flags
 DFLAGS =
@@ -17,7 +17,7 @@ WFLAGS_EXTRA = -pedantic -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled
                -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow \
                -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef
 # Linker flags
-LFLAGS =
+LFLAGS = -fopenmp
 
 # Source files
 SRC_DIR = src
@@ -45,7 +45,7 @@ EXEC = clustering
 # ==================================================================================================
 # Main targets
 
-all: debug
+all: release
 
 debug: DFLAGS += -ggdb
 debug: $(EXEC)
