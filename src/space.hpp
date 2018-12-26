@@ -19,6 +19,16 @@ typedef std::pair<Real, Real> Point;
 // representation of a metric graph
 typedef std::vector<Point> Graph;
 
+// hash implementation for points
+struct pointhash {
+    public:
+        template <typename T, typename U>
+        std::size_t operator()(const std::pair<T, U> &x) const
+        {
+            return std::hash<T>()(x.first) ^ std::hash<U>()(x.second);
+        }
+};
+
 
 /**
  * Compute the distance between two points

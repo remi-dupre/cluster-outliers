@@ -6,7 +6,7 @@
 #include <vector>
 #include <omp.h>
 
-#include "space.hpp"
+#include "../space.hpp"
 
 
 /**

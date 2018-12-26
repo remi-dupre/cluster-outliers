@@ -1,6 +1,6 @@
-clustering
-build/
-deps/
-callgrind.out.*
-dataset.txt
-
+/clustering
+/build/
+/deps/
+/logs/
+/callgrind.out.*
+/dataset.txt
