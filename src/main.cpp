@@ -14,8 +14,10 @@ int main()
     //
     // std::cout << "Solution cost: " << cost(graph, 10, cluster) << '\n';
 
-    Graph cluster = a4_streaming_clustering(std::cin, 50, 10);
+    Graph cluster = streaming_a4_clustering(std::cin, 20, 100);
     std::cout << "Solution size: " << cluster.size() << '\n';
+
+    // streaming_check_soluce(std::cin);
 
     return 0;
 }

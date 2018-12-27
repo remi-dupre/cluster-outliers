@@ -4,7 +4,6 @@
 #include <iostream>
 #include <limits>
 #include <vector>
-#include <omp.h>
 
 #include "../space.hpp"
 

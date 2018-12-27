@@ -19,6 +19,9 @@ Real cost(const Graph& graph, int outliers, const Graph& clustering)
 
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 {
+    if (graph.size() == 0)
+        return graph;
+
     // Compute initial disks
     std::vector<std::unordered_set<size_t>> G(graph.size()); // disks of radius r
     std::vector<std::unordered_set<size_t>> E(graph.size()); // disks of radius 3r
@@ -56,6 +59,9 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
             #pragma omp barrier
 
             // Update disks
+            if (E[mw_index].size() == 0)
+                break;
+
             const std::unordered_set<size_t> to_remove = E[mw_index];
 
             #pragma omp single
