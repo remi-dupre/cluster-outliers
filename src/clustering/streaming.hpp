@@ -10,6 +10,7 @@
 
 #include "../data.hpp"
 #include "../space.hpp"
+#include "../progressbar.hpp"
 
 #include "offline.hpp"
 

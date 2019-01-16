@@ -31,8 +31,12 @@ Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
         free_points.insert(batch.begin(), batch.end());
      }
 
+    int progress = batch.size();
+
     // Streaming algorithm
     while (batch.size() > 0) {
+        std::cout << '\r' << "Running (r = " << r << ")" << ProgressBar(progress, 1000000)
+            << "(" << progress << "/1000000)";
 
         // Drop any free points that are within distance ηr of cluster centers
         {
@@ -86,6 +90,7 @@ Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
         if (feasible_shape && (last_offline.size() > 0 || free_points.size() == 0)) {
             batch = read_serialized(stream, batch_size);
             free_points.insert(batch.begin(), batch.end());
+            progress += batch.size();
             continue;
         }
 
@@ -118,6 +123,8 @@ Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
 
         std::cerr << ", kept " << clusters.size() << std::endl;
     }
+
+    std::cout << '\n';
 
     // Compute output
     Graph output;
