@@ -5,15 +5,24 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <random>
 #include <vector>
 
+#include <json/json.h>
+
 #include "../data.hpp"
 #include "../progressbar.hpp"
 #include "../space.hpp"
 
+
+/**
+ * Check if the solution saved in 'logs/streaming.json' is correct using
+ * parameters and radius saved in this file.
+ */
+bool check_soluce(const Graph& graph);
 
 /**
  * Check if the radius is feasible using a probabilistic algorithm. If this

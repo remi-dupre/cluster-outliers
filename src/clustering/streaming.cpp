@@ -1,18 +1,21 @@
 #include "streaming.hpp"
 
 
-Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
+Graph streaming_a4_clustering(const Graph& graph, int k, int nb_outliers,
     double alpha, double beta, double eta)
 {
     // Initial values
-    Graph batch = read_serialized(stream, k + nb_outliers + 1);
+    auto insert_cursor = graph.begin();
     Graph last_offline;
 
     std::unordered_set<Point, pointhash> free_points;
     std::unordered_map<Point, std::vector<Point>, pointhash> clusters;
 
     const int batch_size = std::min(100, std::max(1, k * nb_outliers));
-    Real r = bound_dist(batch).first / 2;
+    Real r = bound_dist(
+        graph.begin(),
+        std::min(graph.begin() + k + nb_outliers + 1, graph.end())
+    ).first / 2;
 
     // Debug some informations
     std::cerr << "Running streaming algorithm:\n";
@@ -23,20 +26,19 @@ Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
     std::cerr << " - eta = " << eta << '\n';
     std::cerr << " - batch_size = " << batch_size << '\n';
 
-    {
-        // Add missing points to the first batch
-        const Graph missing =
-            read_serialized(stream, batch_size - batch.size());
-        batch.insert(batch.end(), missing.begin(), missing.end());
-        free_points.insert(batch.begin(), batch.end());
-     }
-
-    int progress = batch.size();
+    // Add missing points to the first batch
+    free_points.insert(
+        insert_cursor,
+        std::min(graph.begin() + batch_size, graph.end())
+    );
+    insert_cursor = std::min(graph.begin() + batch_size, graph.end());
 
     // Streaming algorithm
-    while (batch.size() > 0) {
-        std::cout << '\r' << "Running (r = " << r << ")" << ProgressBar(progress, 1000000)
-            << "(" << progress << "/1000000)";
+    while (true) {
+        const int progress = insert_cursor - graph.begin();
+        std::cout << '\r' << "Running (r = " << eta * r << ")"
+            << ProgressBar(progress, 1000000) << "(" << progress << "/1000000)"
+            << std::flush;
 
         // Drop any free points that are within distance ηr of cluster centers
         {
@@ -86,11 +88,16 @@ Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
                 nb_outliers, eta * r);
         }
 
-        // If it can't be covered, read a new batch
+        // If it can be covered, read a new batch
         if (feasible_shape && (last_offline.size() > 0 || free_points.size() == 0)) {
-            batch = read_serialized(stream, batch_size);
-            free_points.insert(batch.begin(), batch.end());
-            progress += batch.size();
+            if (insert_cursor == graph.end())
+                break;
+
+            free_points.insert(
+                insert_cursor,
+                std::min(insert_cursor + batch_size, graph.end())
+            );
+            insert_cursor = std::min(insert_cursor + batch_size, graph.end());
             continue;
         }
 
@@ -163,37 +170,4 @@ Graph streaming_a4_clustering(std::istream& stream, int k, int nb_outliers,
     log_stream << logs;
 
     return output;
-}
-
-bool streaming_check_soluce(std::istream& stream)
-{
-    Json::Value logs;
-    std::ifstream logs_file("logs/streaming.json");
-    Json::parseFromStream(Json::CharReaderBuilder(), logs_file, &logs, nullptr);
-
-    Real r = logs["radius"].asDouble();
-    Real eta = logs["parameters"]["eta"].asDouble();
-
-    size_t out_count = 0;
-
-    for (Point p : read_serialized(stream)) {
-        bool inside = false;
-
-        for (const Json::Value& j_cluster : logs["clusters"]) {
-            Point cluster = {
-                j_cluster["center"][0].asDouble(),
-                j_cluster["center"][1].asDouble()
-            };
-
-            if (dist(p, cluster) <= r * eta)
-                inside = true;
-        }
-
-        if (!inside)
-            out_count++;
-    }
-
-    std::cerr << "Found " << out_count << " outliers\n";
-
-    return out_count <= logs["outliers"].asUInt();
 }

@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <tuple>
 #include <unordered_set>
 #include <vector>
@@ -53,7 +54,8 @@ std::unordered_set<size_t> disk(const Graph& graph, Point center, Real radius);
  *
  * Time: O(n²)  #enhancable
  */
-std::pair<Real, Real> bound_dist(const Graph& graph);
+template<typename Iterator>
+std::pair<Real, Real> bound_dist(Iterator begin, Iterator end);
 
 
 #include "space.inl"

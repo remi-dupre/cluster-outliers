@@ -1,6 +1,39 @@
 #include "evaluate.hpp"
 
 
+bool check_soluce(const Graph& graph)
+{
+    Json::Value logs;
+    std::ifstream logs_file("logs/streaming.json");
+    Json::parseFromStream(Json::CharReaderBuilder(), logs_file, &logs, nullptr);
+
+    Real r = logs["radius"].asDouble();
+    Real eta = logs["parameters"]["eta"].asDouble();
+
+    size_t out_count = 0;
+
+    for (Point p : graph) {
+        bool inside = false;
+
+        for (const Json::Value& j_cluster : logs["clusters"]) {
+            Point cluster = {
+                j_cluster["center"][0].asDouble(),
+                j_cluster["center"][1].asDouble()
+            };
+
+            if (dist(p, cluster) <= r * eta)
+                inside = true;
+        }
+
+        if (!inside)
+            out_count++;
+    }
+
+    std::cerr << "Found " << out_count << " outliers\n";
+
+    return out_count <= logs["outliers"].asUInt();
+}
+
 bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
     std::default_random_engine& engine)
 {
@@ -18,7 +51,6 @@ bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
             if (dist(graph[i], arbitrary_cover) > 2 * radius) {
                 #pragma omp critical
                 i_select = i;
-                // break;
             }
         }
 
@@ -44,7 +76,7 @@ Real bound_radius(const Graph& graph, int k, int nb_outliers, Real precision,
         const Real radius = (max_rad + min_rad) / 2;
 
         int max_step = log((upper_bound - lower_bound) / precision) / log(2);
-        int step = max_step - log((max_rad - min_rad) / precision) / log(2);
+        int step = 1 + max_step - log((max_rad - min_rad) / precision) / log(2);
         std::cout << '\r' << "Evaluates r = " << radius
             << ProgressBar(step, max_step) << '(' << step << '/' << max_step
             << ')' << std::flush;

@@ -102,7 +102,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
         y_max = std::max(y, y_max);
     }
 
-    const auto [min_dist, max_dist] = bound_dist(graph);
+    const auto [min_dist, max_dist] = bound_dist(graph.begin(), graph.end());
 
     std::cerr << "Min dist is " << min_dist << '\n';
     std::cerr << "Max dist is " << max_dist << '\n';
