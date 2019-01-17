@@ -1,24 +1,27 @@
 #include "streaming.hpp"
 
 
-Graph streaming_a4_clustering(const Graph& graph, int k, int nb_outliers,
+Graph streaming_a4_clustering(StreamingGraph& graph, int k, int nb_outliers,
     double alpha, double beta, double eta)
 {
+
     // Initial values
-    auto insert_cursor = graph.begin();
-    Graph last_offline;
+    Graph last_offline, buffer;
 
     std::unordered_set<Point, pointhash> free_points;
     std::unordered_map<Point, std::vector<Point>, pointhash> clusters;
 
     const int batch_size = std::min(100, std::max(1, k * nb_outliers));
-    Real r = bound_dist(
-        graph.begin(),
-        std::min(graph.begin() + k + nb_outliers + 1, graph.end())
-    ).first / 2;
+
+    graph.reset();
+    buffer = graph.read(k + nb_outliers);
+    Real r = bound_dist(buffer.begin(), buffer.end()).first / 2;
+
+    const size_t graph_size = graph.size();
 
     // Debug some informations
     std::cerr << "Running streaming algorithm:\n";
+    std::cerr << " - graph_size = " << graph_size << '\n';
     std::cerr << " - k = " << k << '\n';
     std::cerr << " - nb_outliers = " << nb_outliers << '\n';
     std::cerr << " - alpha = " << alpha << '\n';
@@ -26,19 +29,17 @@ Graph streaming_a4_clustering(const Graph& graph, int k, int nb_outliers,
     std::cerr << " - eta = " << eta << '\n';
     std::cerr << " - batch_size = " << batch_size << '\n';
 
+    graph.reset();
+
     // Add missing points to the first batch
-    free_points.insert(
-        insert_cursor,
-        std::min(graph.begin() + batch_size, graph.end())
-    );
-    insert_cursor = std::min(graph.begin() + batch_size, graph.end());
+    buffer = graph.read(batch_size);
+    free_points.insert(buffer.begin(), buffer.end());
 
     // Streaming algorithm
     while (true) {
-        const int progress = insert_cursor - graph.begin();
-        std::cout << '\r' << "Running (r = " << eta * r << ")"
-            << ProgressBar(progress, 1000000) << "(" << progress << "/1000000)"
-            << std::flush;
+        std::cout << '\r' << "Running (r = " << r << ")"
+            << ProgressBar(graph.cursor, graph_size) << "(" << graph.cursor
+            << "/" << graph_size << ")" << std::flush;
 
         // Drop any free points that are within distance ηr of cluster centers
         {
@@ -90,23 +91,23 @@ Graph streaming_a4_clustering(const Graph& graph, int k, int nb_outliers,
 
         // If it can be covered, read a new batch
         if (feasible_shape && (last_offline.size() > 0 || free_points.size() == 0)) {
-            if (insert_cursor == graph.end())
+            buffer = graph.read(batch_size);
+
+            if (buffer.empty())
                 break;
 
-            free_points.insert(
-                insert_cursor,
-                std::min(insert_cursor + batch_size, graph.end())
-            );
-            insert_cursor = std::min(insert_cursor + batch_size, graph.end());
+            free_points.insert(buffer.begin(), buffer.end());
             continue;
         }
 
         // Increase radius and filter old clusters
-        std::cerr << "Increase radius to " << r << std::endl;
         r = alpha * r;
-
-        std::cerr << "Cleaning " << clusters.size() << " clusters" << std::flush;
         std::unordered_set<Point, pointhash> marked_centers;
+
+        #ifndef NDEBUG
+        std::cerr << "Cleaning " << clusters.size() << " clusters"
+            << std::flush;
+        #endif
 
         while (marked_centers.size() < clusters.size()) {
             for (const auto& [center, supports] : clusters) {
@@ -128,7 +129,9 @@ Graph streaming_a4_clustering(const Graph& graph, int k, int nb_outliers,
             }
         }
 
+        #ifndef NDEBUG
         std::cerr << ", kept " << clusters.size() << std::endl;
+        #endif
     }
 
     std::cout << '\n';

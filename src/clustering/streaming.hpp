@@ -22,5 +22,5 @@
  *
  * If the directory 'logs/' exists, outputs result in 'logs/streaming.json'.
  */
-Graph streaming_a4_clustering(const Graph& graph, int k, int nb_outliers,
+Graph streaming_a4_clustering(StreamingGraph& graph, int k, int nb_outliers,
     double alpha = 4, double beta = 8, double eta = 16);
