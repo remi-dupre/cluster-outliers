@@ -36,6 +36,11 @@ struct pointhash {
 inline Real dist(Point a, Point b);
 
 /**
+ * Compute the distance of a point to a set.
+ */
+Real dist(Point a, const std::vector<Point>& s);
+
+/**
  * Compute the unordered_set of points of the graph withing a given disk.
  *
  * Time: O(n ln n) with n = graph.size()
