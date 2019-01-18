@@ -12,7 +12,7 @@ bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
         Graph local_arbitrary_cover;
 
         #pragma omp for
-        for (int i_select = 0 ; i_select < graph.size() ; i_select++) {
+        for (size_t i_select = 0 ; i_select < graph.size() ; i_select++) {
             if (dist(graph[i_select], local_arbitrary_cover) > 2 * radius) {
                 #pragma omp critical
                 {
@@ -43,9 +43,10 @@ Real bound_radius(const Graph& graph, int k, int nb_outliers, Real precision,
 
         int max_step = log((upper_bound - lower_bound) / precision) / log(2);
         int step = 1 + max_step - log((max_rad - min_rad) / precision) / log(2);
-        std::cout << '\r' << "Evaluates r = " << radius
+        std::cout << std::fixed << std::setprecision(4) << std::setfill('0')
+            << '\r' << "Bounding (r = " << radius << ")   "
             << ProgressBar(step, max_step) << '(' << step << '/' << max_step
-            << ')' << std::flush;
+            << ")" << std::flush;
 
         if (!feasible_radius(graph, k, nb_outliers, radius, counter_example))
             min_rad = radius;

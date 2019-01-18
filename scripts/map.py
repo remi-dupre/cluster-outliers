@@ -1,25 +1,27 @@
 #!/usr/bin/python
+
 import json
 import math
 import multiprocessing
 import numpy as np
+import os
 import sys
 
 from PIL import Image, ImageDraw
+from glob import glob
 
-import space
-import draw
+import tools.space as space
+import tools.draw as draw
 
 
 tweets_file = 'dataset.txt'
-clusts_file = 'logs/streaming.json'
-output_file = 'map.png'
 
 height = 3600
 width = 2 * height
 
-
+#####
 ## Create map visualisation of emitted tweets
+
 print('Read tweets from `%s`' % tweets_file)
 
 img = Image.new('F', (width, height), 0)
@@ -36,17 +38,28 @@ with open(tweets_file) as data:
 
 img = img.convert('RGB')
 
-
+#####
 ## Show clusters on the map
-print('Read solution from `%s`' % clusts_file)
-pix = img.load()
 
-with open(clusts_file) as file:
-    data = json.load(file)
+try: os.makedirs('maps')
+except: pass
+
+for filename in sorted(glob('logs/*.json')):
+    print('Read solution from `%s`' % filename)
+
+    loc_img = img.copy()
+    pix = loc_img.load()
+
+    with open(filename) as file:
+        data = json.load(file)
+
     radius = data['radius']
+
+    if data['parameters']['log_type'] == 'counter_example':
+        radius = data['parameters']['critical_radius']
 
     for cluster in data['clusters']:
         draw.circle(pix, cluster['center'], radius, width, height)
 
-# img = Image.fromarray(pix)
-img.save(output_file)
+    output_file = 'maps/' + filename.split('/')[1].split('.')[0] + '.png'
+    loc_img.save(output_file)

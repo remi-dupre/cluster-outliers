@@ -1,7 +1,7 @@
 """
 Basic functions to draw shapes on the map.
 """
-import space
+import tools.space as space
 
 
 def circle(pix, p_center, radius, width, height):

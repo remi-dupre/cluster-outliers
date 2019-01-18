@@ -4,6 +4,6 @@ __pycache__
 /build/
 /deps/
 /logs/
+/maps/
 /callgrind.out.*
 /dataset.txt
-/map.png

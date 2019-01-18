@@ -37,7 +37,8 @@ Graph streaming_a4_clustering(StreamingGraph& graph, int k, int nb_outliers,
 
     // Streaming algorithm
     while (true) {
-        std::cout << '\r' << "Running (r = " << r << ")"
+        std::cout << std::fixed << std::setprecision(4) << std::setfill('0')
+            << '\r' << "Running  (r = " << r << ")   "
             << ProgressBar(graph.cursor, graph_size) << "(" << graph.cursor
             << "/" << graph_size << ")" << std::flush;
 
