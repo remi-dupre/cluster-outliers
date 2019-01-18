@@ -6,6 +6,8 @@
 #include <limits>
 #include <vector>
 
+#include <json/json.h>
+
 #include "space.hpp"
 
 
@@ -40,8 +42,10 @@ class StreamingGraph
          */
         size_t size();
 
-        /* Bounds for the iterations */
+        /* Reset the cursor to the begining and gives an iterator */
         StreamingGraphIterator begin();
+
+        /* Gives an unusable iterator representing the end of the graph */
         StreamingGraphIterator end();
 
         int cursor;  // position we are reading at on the graph
@@ -52,6 +56,9 @@ class StreamingGraph
     friend class StreamingGraphIterator;
 };
 
+/**
+ * InputIterator for streaming graphs
+ */
 class StreamingGraphIterator
 {
     public:

@@ -6,8 +6,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <json/json.h>
-
 #include "../data.hpp"
 #include "../space.hpp"
 #include "../progressbar.hpp"

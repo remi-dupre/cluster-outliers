@@ -143,34 +143,5 @@ Graph streaming_a4_clustering(StreamingGraph& graph, int k, int nb_outliers,
         output.push_back(center);
 
     output.insert(output.end(), last_offline.begin(), last_offline.end());
-
-    // Print logs if corresponding dir exists
-    Json::Value params;
-    params["alpha"] = alpha;
-    params["beta"] = beta;
-    params["eta"] = eta;
-    params["outliers"] = nb_outliers;
-    params["clusters"] = k;
-
-    Json::Value log_custers;
-    int cluster_index = 0;
-
-    for (Point center : output) {
-        log_custers[cluster_index]["center"][0] = center.first;
-        log_custers[cluster_index]["center"][1] = center.second;
-        log_custers[cluster_index]["free_point"] =
-            (size_t) cluster_index >= clusters.size();
-
-        cluster_index++;
-    }
-
-    Json::Value logs;
-    logs["radius"] = r;
-    logs["parameters"] = params;
-    logs["clusters"] = log_custers;
-
-    std::ofstream log_stream("./logs/streaming.json", std::ios::trunc);
-    log_stream << logs;
-
     return output;
 }

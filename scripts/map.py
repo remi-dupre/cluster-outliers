@@ -43,7 +43,7 @@ pix = img.load()
 
 with open(clusts_file) as file:
     data = json.load(file)
-    radius = data['radius'] * data['parameters']['eta']
+    radius = data['radius']
 
     for cluster in data['clusters']:
         draw.circle(pix, cluster['center'], radius, width, height)

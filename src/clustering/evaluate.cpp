@@ -1,41 +1,9 @@
 #include "evaluate.hpp"
 
 
-bool check_soluce(const Graph& graph)
-{
-    Json::Value logs;
-    std::ifstream logs_file("logs/streaming.json");
-    Json::parseFromStream(Json::CharReaderBuilder(), logs_file, &logs, nullptr);
-
-    Real r = logs["radius"].asDouble();
-    Real eta = logs["parameters"]["eta"].asDouble();
-
-    size_t out_count = 0;
-
-    for (Point p : graph) {
-        bool inside = false;
-
-        for (const Json::Value& j_cluster : logs["clusters"]) {
-            Point cluster = {
-                j_cluster["center"][0].asDouble(),
-                j_cluster["center"][1].asDouble()
-            };
-
-            if (dist(p, cluster) <= r * eta)
-                inside = true;
-        }
-
-        if (!inside)
-            out_count++;
-    }
-
-    std::cerr << "Found " << out_count << " outliers\n";
-
-    return out_count <= logs["outliers"].asUInt();
-}
-
 bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
-    std::default_random_engine& engine)
+    std::default_random_engine& engine,
+    const std::unique_ptr<Graph>& counter_example)
 {
     std::vector<Point> arbitrary_cover;
 
@@ -60,11 +28,15 @@ bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
             break;
     }
 
+    if (arbitrary_cover.size() > (size_t) k + nb_outliers)
+        *counter_example = arbitrary_cover;
+
     return arbitrary_cover.size() <= (size_t) k + nb_outliers;
 }
 
 Real bound_radius(const Graph& graph, int k, int nb_outliers, Real precision,
-    Real lower_bound, Real upper_bound)
+    Real lower_bound, Real upper_bound,
+    const std::unique_ptr<Graph>& counter_example)
 {
     std::random_device rd;
     std::default_random_engine random_engine(rd());
@@ -81,7 +53,8 @@ Real bound_radius(const Graph& graph, int k, int nb_outliers, Real precision,
             << ProgressBar(step, max_step) << '(' << step << '/' << max_step
             << ')' << std::flush;
 
-        if (!feasible_radius(graph, k, nb_outliers, radius, random_engine))
+        if (!feasible_radius(graph, k, nb_outliers, radius, random_engine,
+          counter_example))
             min_rad = radius;
         else
             max_rad = radius;
