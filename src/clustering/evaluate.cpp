@@ -4,30 +4,25 @@
 bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
     const std::unique_ptr<Graph>& counter_example)
 {
-    std::vector<Point> arbitrary_cover;
+    Graph arbitrary_cover;
     std::sort(graph.begin(), graph.end());
-    size_t i_min = 0;
 
-    for (int step = 0 ; step < k + nb_outliers + 1 ; step++) {
-        // std::shuffle(graph.begin(), graph.end(), engine);
-        size_t i_select = graph.size();
+    #pragma omp parallel
+    {
+        Graph local_arbitrary_cover;
 
-        for (size_t i = i_min ; i < graph.size() ; i++) {
-            if (i_select < graph.size())
-                continue;
-
-            if (dist(graph[i], arbitrary_cover) > 2 * radius) {
+        #pragma omp for
+        for (int i_select = 0 ; i_select < graph.size() ; i_select++) {
+            if (dist(graph[i_select], local_arbitrary_cover) > 2 * radius) {
                 #pragma omp critical
-                i_select = i;
+                {
+                    if (dist(graph[i_select], arbitrary_cover) > 2 * radius)
+                        arbitrary_cover.push_back(graph[i_select]);
+
+                    local_arbitrary_cover = arbitrary_cover;
+                }
             }
         }
-
-        i_min = i_select + 1;
-
-        if (i_select < graph.size())
-            arbitrary_cover.push_back(graph[i_select]);
-        else
-            break;
     }
 
     if (arbitrary_cover.size() > (size_t) k + nb_outliers)
