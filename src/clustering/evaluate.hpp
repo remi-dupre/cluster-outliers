@@ -9,7 +9,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <random>
 #include <vector>
 
 #include <json/json.h>
@@ -28,7 +27,6 @@
  * counter example for the returned value.
  */
 bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
-    std::default_random_engine &engine,
     const std::unique_ptr<Graph>& counter_example =  nullptr);
 
 /**

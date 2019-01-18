@@ -2,17 +2,17 @@
 
 
 bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
-    std::default_random_engine& engine,
     const std::unique_ptr<Graph>& counter_example)
 {
     std::vector<Point> arbitrary_cover;
+    std::sort(graph.begin(), graph.end());
+    size_t i_min = 0;
 
     for (int step = 0 ; step < k + nb_outliers + 1 ; step++) {
-        std::shuffle(graph.begin(), graph.end(), engine);
+        // std::shuffle(graph.begin(), graph.end(), engine);
         size_t i_select = graph.size();
 
-        #pragma omp parallel for
-        for (size_t i = 0 ; i < graph.size() ; i++) {
+        for (size_t i = i_min ; i < graph.size() ; i++) {
             if (i_select < graph.size())
                 continue;
 
@@ -21,6 +21,8 @@ bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
                 i_select = i;
             }
         }
+
+        i_min = i_select + 1;
 
         if (i_select < graph.size())
             arbitrary_cover.push_back(graph[i_select]);
@@ -38,9 +40,6 @@ Real bound_radius(const Graph& graph, int k, int nb_outliers, Real precision,
     Real lower_bound, Real upper_bound,
     const std::unique_ptr<Graph>& counter_example)
 {
-    std::random_device rd;
-    std::default_random_engine random_engine(rd());
-
     Real min_rad = lower_bound;
     Real max_rad = upper_bound;
 
@@ -53,8 +52,7 @@ Real bound_radius(const Graph& graph, int k, int nb_outliers, Real precision,
             << ProgressBar(step, max_step) << '(' << step << '/' << max_step
             << ')' << std::flush;
 
-        if (!feasible_radius(graph, k, nb_outliers, radius, random_engine,
-          counter_example))
+        if (!feasible_radius(graph, k, nb_outliers, radius, counter_example))
             min_rad = radius;
         else
             max_rad = radius;
