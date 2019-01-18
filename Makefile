@@ -2,7 +2,7 @@
 # Variables
 
 # C++ compiler name
-CXX = g++
+CXX = clang++
 
 # Compiler flags
 CFLAGS = -std=c++17 -fopenmp
@@ -17,7 +17,7 @@ WFLAGS_EXTRA = -pedantic -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled
                -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow \
                -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef
 # Linker flags
-LFLAGS = -fopenmp -ljsoncpp
+LFLAGS = -lstdc++fs -fopenmp -ljsoncpp
 
 # Source files
 SRC_DIR = src

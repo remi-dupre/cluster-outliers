@@ -37,6 +37,7 @@ std::pair<Real, Real> bound_dist(const Graph& graph)
     Real min_dist = +std::numeric_limits<Real>::infinity();
     Real max_dist = -std::numeric_limits<Real>::infinity();
 
+    #pragma omp parallel for
     for (size_t i_x = 0 ; i_x < graph.size() ; i_x++) {
         for (size_t i_y = 0 ; i_y < i_x ; i_y++) {
             const Real curr_dist = dist(graph[i_x], graph[i_y]);

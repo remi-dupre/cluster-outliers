@@ -2,8 +2,6 @@
 
 import json
 import math
-import multiprocessing
-import numpy as np
 import os
 import sys
 

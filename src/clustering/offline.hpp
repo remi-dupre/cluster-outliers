@@ -26,6 +26,6 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius);
 /**
  * Find a 3-approximation k-clustering with at most nb_outliers outliers.
  *
- * Time: O(kn ln n ln(max_dist/min_dist) + n²)
+ * Time: O(kn ln n ln(P) + n²) with  n = graph.size() and P = max_dist/min_dist
  */
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers);

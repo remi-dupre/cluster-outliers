@@ -1,10 +1,13 @@
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <string>
+#include <thread>
 
+#include <omp.h>
 #include <json/json.h>
 
 #include "clustering/streaming.hpp"
@@ -17,13 +20,18 @@
 
 constexpr int default_nb_clust = 20;
 constexpr int default_outliers = 10;
-constexpr double alpha = 1.1;
+constexpr double alpha = 2;
 constexpr double beta = 8;
 constexpr double eta = 16;
 
 
 int main(int argc, const char** argv)
 {
+    #ifndef NDEBUG
+    std::cerr << "Using " << std::thread::hardware_concurrency()
+        << " threads\n";
+    #endif
+
     // ----------
     // Read parameters
 
@@ -87,6 +95,10 @@ int main(int argc, const char** argv)
 
     // ----------
     // Output some logs if directory logs/ exists
+
+    if (!std::filesystem::is_directory("logs") || !std::filesystem::exists("logs")) { // Check if src folder exists
+        std::filesystem::create_directory("logs"); // create src folder
+    }
 
     {
         Json::Value params;
