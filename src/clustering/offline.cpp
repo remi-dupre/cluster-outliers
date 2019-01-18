@@ -1,30 +1,14 @@
 #include "offline.hpp"
 
 
-Real cost(const Graph& graph, int outliers, const Graph& clustering)
-{
-    if (outliers >= (int) graph.size())
-        return 0;
-
-    std::vector<Real> node_cost
-        (graph.size(), std::numeric_limits<Real>::infinity());
-
-    for (Point center : clustering)
-        for (size_t x = 0 ; x < graph.size() ; x++)
-            node_cost[x] = std::min(node_cost[x], dist(graph[x], center));
-
-    std::sort(node_cost.begin(), node_cost.end());
-    return node_cost[graph.size() - outliers - 1];
-}
-
 Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
 {
     if (graph.size() == 0)
         return graph;
 
     // Compute initial disks
-    std::vector<std::unordered_set<size_t>> G(graph.size()); // disks of radius r
-    std::vector<std::unordered_set<size_t>> E(graph.size()); // disks of radius 3r
+    std::vector<std::unordered_set<size_t>> G(graph.size()); // radius r
+    std::vector<std::unordered_set<size_t>> E(graph.size()); // radius 3r
 
     #pragma omp parallel for
     for (size_t i = 0 ; i < graph.size() ; i++) {
@@ -37,48 +21,36 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers, Real radius)
     size_t nb_covered = 0;
     size_t mw_index = 0;
 
-    #pragma omp parallel
-    {
-        while ((int) clusters.size() < k) {
-            // Compute cluster of max weight
-            size_t local_mw_index = 0;
+    while ((int) clusters.size() < k) {
+        // Compute cluster of max weight
+        size_t local_mw_index = 0;
 
-            #pragma omp for
-            for (size_t i = 0 ; i < graph.size() ; i++)
-                if (G[i].size() > G[local_mw_index].size())
-                    local_mw_index = i;
+        for (size_t i = 0 ; i < graph.size() ; i++)
+            if (G[i].size() > G[local_mw_index].size())
+                local_mw_index = i;
 
-            #pragma omp critical
-            {
-                if (G[local_mw_index].size() > G[mw_index].size())
-                    mw_index = local_mw_index;
-                else if (G[mw_index].size() == G[local_mw_index].size() && local_mw_index < mw_index)
-                    mw_index = local_mw_index;
+        if (G[local_mw_index].size() > G[mw_index].size())
+            mw_index = local_mw_index;
+        else if (G[mw_index].size() == G[local_mw_index].size()
+          && local_mw_index < mw_index)
+            mw_index = local_mw_index;
+
+        #pragma omp barrier
+
+        // Update disks
+        if (E[mw_index].size() == 0)
+            break;
+
+        const std::unordered_set<size_t> to_remove = E[mw_index];
+        clusters.push_back(graph[mw_index]);
+        nb_covered += E[mw_index].size();
+
+        #pragma omp parallel for
+        for (size_t i = 0 ; i < graph.size() ; i++) {
+            for (size_t x : to_remove) {
+                E[i].erase(x);
+                G[i].erase(x);
             }
-
-            #pragma omp barrier
-
-            // Update disks
-            if (E[mw_index].size() == 0)
-                break;
-
-            const std::unordered_set<size_t> to_remove = E[mw_index];
-
-            #pragma omp single
-            {
-                clusters.push_back(graph[mw_index]);
-                nb_covered += E[mw_index].size();
-            }
-
-            #pragma omp for
-            for (size_t i = 0 ; i < graph.size() ; i++) {
-                for (size_t x : to_remove) {
-                    E[i].erase(x);
-                    G[i].erase(x);
-                }
-            }
-
-            #pragma omp barrier
         }
     }
 
@@ -102,10 +74,12 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
         y_max = std::max(y, y_max);
     }
 
-    const auto [min_dist, max_dist] = bound_dist(graph.begin(), graph.end());
+    const auto [min_dist, max_dist] = bound_dist(graph);
 
+    #ifndef NDEBUG
     std::cerr << "Min dist is " << min_dist << '\n';
     std::cerr << "Max dist is " << max_dist << '\n';
+    #endif
 
     Real min_r = 0;
     Real max_r = max_dist;
@@ -113,7 +87,7 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
     // Find a 3-approximation algorithm using a binary search
     while (max_r - min_r >= min_dist) {
         const Real mid_r = (min_r + max_r) / 2;
-        const Graph& clustering = a3_clustering(graph, k, nb_outliers, mid_r);
+        const Graph clustering = a3_clustering(graph, k, nb_outliers, mid_r);
 
         if (clustering.empty())
             min_r = mid_r;
@@ -121,7 +95,9 @@ Graph a3_clustering(const Graph& graph, int k, int nb_outliers)
             max_r = mid_r;
     }
 
+    #ifndef NDEBUG
     std::cerr << "Radius is " << max_r << '\n';
+    #endif
 
     return a3_clustering(graph, k, nb_outliers, max_r);
 }

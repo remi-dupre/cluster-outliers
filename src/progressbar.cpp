@@ -35,6 +35,6 @@ std::ostream& operator<<(std::ostream& stream, const ProgressBar& progressbar)
     for (int i = 0 ; i < c_empty ; i++)
         stream << "\u00B7";
 
-    stream << part_chars[1];
+    stream << "▏";
     return stream;
 }

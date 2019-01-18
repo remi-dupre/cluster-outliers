@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -11,18 +12,27 @@
 #include "space.hpp"
 
 
-Graph read_serialized(std::istream& stream);
-Graph read_serialized(std::istream& stream, int count);
+/**
+ * Read raw graph from a stream. It must be ascii-formated, with 3 columns
+ * separated with spaces:
+ *  - the first column is ignored
+ *  - the second and third column contains longitude and latitude of points
+ */
+Graph read_serialized(std::istream& stream);  // Read the full graph
+Graph read_serialized(std::istream& stream, int count);  // Read `count` points
 
 
 /**
- * Representation of a graph that is not fully loaded into memory, but still
+ * Representation of a graph that is not fully loaded into memory, but is still
  * iterable.
  */
 class StreamingGraphIterator;
 class StreamingGraph
 {
     public:
+        /**
+         * Link the graph to an opened file.
+         */
         StreamingGraph(std::ifstream& file);
 
         /**
@@ -42,7 +52,7 @@ class StreamingGraph
          */
         size_t size();
 
-        /* Reset the cursor to the begining and gives an iterator */
+        /* Reset the cursor to the begining and gives an iterator on it */
         StreamingGraphIterator begin();
 
         /* Gives an unusable iterator representing the end of the graph */
@@ -57,12 +67,11 @@ class StreamingGraph
 };
 
 /**
- * InputIterator for streaming graphs
+ * Input Iterator for streaming graphs
  */
 class StreamingGraphIterator
 {
     public:
-        /* Create a new iterator that is actually next value */
         StreamingGraphIterator(StreamingGraph& graph);
         StreamingGraphIterator operator++(int count);
         StreamingGraphIterator operator++();

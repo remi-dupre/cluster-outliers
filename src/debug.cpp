@@ -20,6 +20,5 @@ Json::Value soluce_infos(const Graph& graph, int k, int nb_outliers,
     logs["parameters"] = params;
     logs["radius"] = cost(graph, nb_outliers, clusters);
     logs["clusters"] = log_custers;
-
     return logs;
 }

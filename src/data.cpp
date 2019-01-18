@@ -22,10 +22,14 @@ Graph read_serialized(std::istream& stream)
 StreamingGraph::StreamingGraph(std::ifstream &file) :
     cursor (0),
     file (file)
-{}
+{
+    assert(file.is_open());
+}
 
 void StreamingGraph::reset()
 {
+    assert(file.is_open());
+
     cursor = 0;
     file.clear();
     file.seekg(0, std::ios::beg);
@@ -33,6 +37,8 @@ void StreamingGraph::reset()
 
 Graph StreamingGraph::read(int count)
 {
+    assert(file.is_open());
+
     const Graph res = read_serialized(file, count);
     cursor += res.size();
     return res;
@@ -40,12 +46,16 @@ Graph StreamingGraph::read(int count)
 
 size_t StreamingGraph::size()
 {
+    assert(file.is_open());
+
     while (!read(1024).empty());
     return cursor;
 }
 
 StreamingGraphIterator StreamingGraph::begin()
 {
+    assert(file.is_open());
+
     reset();
     return StreamingGraphIterator(*this);
 }
@@ -103,8 +113,8 @@ Point* StreamingGraphIterator::operator->()
 bool operator==(const StreamingGraphIterator& it_a,
     const StreamingGraphIterator& it_b)
 {
-    return (it_a.overflow && it_b.overflow)
-        || ((!it_a.overflow && !it_b.overflow) && it_a.graph.cursor == it_b.graph.cursor);
+    return (it_a.overflow && it_b.overflow) || ((!it_a.overflow &&
+        !it_b.overflow) && it_a.graph.cursor == it_b.graph.cursor);
 }
 
 bool operator!=(const StreamingGraphIterator& it_a,

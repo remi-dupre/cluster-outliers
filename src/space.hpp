@@ -42,6 +42,11 @@ inline Real dist(Point a, Point b);
 Real dist(Point a, const std::vector<Point>& s);
 
 /**
+ * Compute the distance between two set of points.
+ */
+Real dist(const std::vector<Point>& s, const std::vector<Point>& p);
+
+/**
  * Compute the unordered_set of points of the graph withing a given disk.
  *
  * Time: O(n ln n) with n = graph.size()
@@ -52,10 +57,9 @@ std::unordered_set<size_t> disk(const Graph& graph, Point center, Real radius);
  * Compute the minimal and maximal distance between two distinct points in the
  * given graph. The minimal distance can't be zero.
  *
- * Time: O(n²)  #enhancable
+ * Time: O(n²) with n = graph.size()
  */
-template<typename Iterator>
-std::pair<Real, Real> bound_dist(Iterator begin, Iterator end);
+std::pair<Real, Real> bound_dist(const Graph& graph);
 
 
 #include "space.inl"

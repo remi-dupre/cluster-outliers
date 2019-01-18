@@ -1,6 +1,23 @@
 #include "evaluate.hpp"
 
 
+Real cost(const Graph& graph, int outliers, const Graph& clustering)
+{
+    if (outliers >= (int) graph.size())
+        return 0;
+
+    std::vector<Real> node_cost
+        (graph.size(), std::numeric_limits<Real>::infinity());
+
+    #pragma omp parallel for
+    for (size_t x = 0 ; x < graph.size() ; x++)
+        for (Point center : clustering)
+            node_cost[x] = std::min(node_cost[x], dist(graph[x], center));
+
+    std::sort(node_cost.begin(), node_cost.end());
+    return node_cost[graph.size() - outliers - 1];
+}
+
 bool feasible_radius(Graph graph, int k, int nb_outliers, Real radius,
     const std::unique_ptr<Graph>& counter_example)
 {

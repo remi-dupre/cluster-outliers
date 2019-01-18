@@ -9,14 +9,6 @@
 
 
 /**
- * Evaluate the cost of a solution of k-clustering with outliers.
- *
- * Complexity: O(kn + n ln(n))  #enhancable
- */
-Real cost(const Graph& graph, int outliers, const Graph& clustering);
-
-
-/**
  * Implementation of a simple k-clustering with outliers algorithm as defined
  * in section 3 of "Algorithms for Facility Location Problems with Outliers"
  * from Moses Charikar, Samir Khuller, David M. Mount, Giri Narasimhan

@@ -5,7 +5,7 @@
 #include "data.hpp"
 #include "space.hpp"
 
-#include "clustering/offline.hpp"
+#include "clustering/evaluate.hpp"
 
 
 /**

@@ -50,7 +50,7 @@ all: release
 debug: DFLAGS += -ggdb
 debug: $(EXEC)
 
-release: CFLAGS += -O3 -DNDEBUG
+release: CFLAGS += -O3 -Ofast -DNDEBUG
 release: $(EXEC)
 
 # ==================================================================================================
@@ -71,9 +71,9 @@ $(DEP_DIR)/%.d: $(SRC_DIR)/%.cpp
 	$(CXX) $(CFLAGS) -MM -MT '$(<:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)' $< -MF $@
 
 # Include dependency files, without errors if they do not exist
-NO_DEPS = clean clean-all warnings lint cppcheck-html doc package package-deb package-tar $(TEST_EXEC)
+NO_DEPS = clean clean-all warnings test
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NO_DEPS))))
-        -include $(DEP_FILES)
+	include $(DEP_FILES)
 endif
 
 # ==================================================================================================
@@ -92,6 +92,7 @@ $(BUILD_DIR)/%.w: $(SRC_DIR)/%.cpp
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(DEP_DIR)
+	rm -rf logs maps
 	rm -rf *~
 
 # Clean everything

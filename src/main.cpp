@@ -7,7 +7,6 @@
 
 #include <json/json.h>
 
-#include "clustering/offline.hpp"
 #include "clustering/streaming.hpp"
 #include "clustering/evaluate.hpp"
 
@@ -59,7 +58,7 @@ int main(int argc, const char** argv)
     // Run the streaming algorithm
 
     const auto start = std::chrono::system_clock::now();
-    Graph clusters = streaming_a4_clustering(graph, nb_clust, outliers, alpha,
+    Graph clusters = streaming_clustering(graph, nb_clust, outliers, alpha,
         beta, eta);
     const auto end = std::chrono::system_clock::now();
 
@@ -80,13 +79,14 @@ int main(int argc, const char** argv)
     const Real bound = bound_radius(graph_cpy, nb_clust, outliers, 0.001, 0, 2,
         counter_example);
 
-    std::cout << "Radius of current solution is " << clusters_radius << '\n';
+    std::cout << "Radius of current solution is " << clusters_radius << " ("
+        << duration.count() <<  "s)\n";
     std::cout << "There can't be a solution with radius " << bound << '\n';
     std::cout << "The approximation ratio is at most "
         << clusters_radius / bound << '\n';
 
     // ----------
-    // Output some logs
+    // Output some logs if directory logs/ exists
 
     {
         Json::Value params;
