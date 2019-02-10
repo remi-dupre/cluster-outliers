@@ -50,7 +50,7 @@ all: release
 debug: DFLAGS += -ggdb
 debug: $(EXEC)
 
-release: CFLAGS += -O3 -Ofast -DNDEBUG
+release: CFLAGS += -O3 -DNDEBUG
 release: $(EXEC)
 
 # ==================================================================================================

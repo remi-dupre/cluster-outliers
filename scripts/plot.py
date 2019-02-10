@@ -1,9 +1,13 @@
 #!/usr/bin/python
 
 import json
+import matplotlib
 import matplotlib.pyplot as plt
-
 from glob import glob
+
+
+matplotlib.rc('text', usetex=True)
+matplotlib.rcParams.update({'font.size': 20})
 
 
 time_plot = []
@@ -41,13 +45,17 @@ ax1.set_ylabel('time (s)', color=color)
 ax1.plot(*zip(*time_plot), color=color)
 ax1.tick_params(axis='y', labelcolor=color)
 
+fig.tight_layout()  # otherwise the right y-label is slightly clipped
+plt.show()
 
-ax2 = ax1.twinx()
+
+fig, ax1 = plt.subplots()
 
 color = 'tab:blue'
-ax2.set_ylabel('approximation bound ratio', color=color)
-ax2.plot(*zip(*ratio_plot), color=color)
-ax2.tick_params(axis='y', labelcolor=color)
+ax1.set_xlabel('outliers')
+ax1.set_ylabel('approximation bound ratio', color=color)
+ax1.plot(*zip(*ratio_plot), color=color)
+ax1.tick_params(axis='y', labelcolor=color)
 
 
 fig.tight_layout()  # otherwise the right y-label is slightly clipped

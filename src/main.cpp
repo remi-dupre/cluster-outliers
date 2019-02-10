@@ -20,7 +20,7 @@
 
 constexpr int default_nb_clust = 20;
 constexpr int default_outliers = 10;
-constexpr double alpha = 2;
+constexpr double alpha = 4;
 constexpr double beta = 8;
 constexpr double eta = 16;
 
