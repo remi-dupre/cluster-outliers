@@ -1,0 +1,195 @@
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[a4paper]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{pgf}
+
+\graphicspath{ {./images/} }
+
+
+\title{Streaming Algorithms for $k$-center Clustering with Outliers}
+\author{Rémi Dupré}
+
+
+\begin{document}
+
+\maketitle
+
+
+\section{Introduction}
+
+  This document sums up my work implementing some algorithms from \cite{CKMN01}
+  and \cite{MK08}, these papers introduce streaming algorithm for the
+  $k$-center clustering with outliers problem.
+
+  We are given $n$ points as input and integers $k$ and $z$. The problem is to
+  find a set $C$ of $k$ points and a set $O$ of $z$ outliers such that the cost
+  defined as follows is minimal:
+
+  $$cost = \max\limits_{p_G \in G \setminus O} d(p_G, C)$$
+
+  This cost can be interpreted as the minimal radius required for clusters of
+  centers in $C$ to cover all the points of the graph but $z$ of them.
+
+  \subsection{Implementations}
+
+    I implemented this project using C++17, all tests described in this report
+    are run using a binary built with \textit{clang} 7.0.1 and using the
+    \textit{-O3} flag. The entire codebase of the project can be found on
+    \href{https://github.com/remi-dupre/cluster-outliers}{my GitHub}.
+
+    \subsubsection{Offline algorithm}
+
+      The implementation of the offline 3-approximation algorithm described in
+      \cite{CKMN01} was written naively: all disks are exhaustively stored
+      using \texttt{std::unordered\_set} (which is supposed to be implemented
+      with hashmaps). The costly operation is to remove all elements of a disk
+      from others, I decided to parallelize this operation using
+      \textit{openMP}.
+
+    \subsubsection{Streaming}
+
+      \sloppy
+      The implementation of this algorithm is also rather basic, free points
+      are stored in a \texttt{std::unordered\_set} for $O(\log n)$ operations.
+      Cluster are saved in a similar way using \texttt{std::unordered\_map},
+      keeping track of the center of the clusters and of their supports.
+
+      The subject asked not to load the whole graph into memory this condition
+      is respected, however as the whole file easily fits in memory, I decided
+      to implement algorithms that are not used by streaming algorithms with
+      the full graph as input.
+
+    \subsubsection{Distance}
+
+      I did most of my experiments using a spheric distance instead of the
+      simpler euclidean distance over the (longitude, latitude) coordinates. It
+      seemed more coherent and simple to implement as it only requires to
+      change the distance function, I'll try to attach some results using the
+      euclidean distance if you need to compare those.
+
+      When projected on a 2D space, circles may look distorted, it is not hard
+      to project it on a sphere, for example by using the website
+      \url{https://www.maptoglobe.com/} and get \href{https://raw.githubusercontent.com/remi-dupre/cluster-outliers/ressources/maps/streaming_20-50.gif}{this kind of result}.
+
+
+\section{Lower bound algorithm}
+
+  The algorithm described in \cite{MK08} ensures an upper bound $\eta$ on the
+  result. This upper bound is rather high and often quite pessimistic compared
+  to the actual result. In order to try getting a better bound to the
+  approximation ratio I tried a simple algorithms that finds a lower bound to
+  the radius of clusters.
+
+  $$\text{approximation\ ratio} = \frac{\text{cost}}{\text{optimal}} \leq
+  \frac{\text{cost}}{\text{minimal\ radius}}$$
+
+  My algorithm tries to find a radius $r_{\min}$ small enough to be sure that
+  there can't be any covering of the graph using $k$ clusters of this radius.
+  To do so, it selects arbitrary values of $r_{\min}$ and search greedily for
+  $k + z + 1$ points that are separated by a distance higher than $2 r_{\min}$.
+  As there can't be any circle of radius $r_{\min}$ covering two of theses
+  points, any clustering of radius $r_{\min}$ leaves at least $z + 1$ of theses
+  points as outliers.
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{counter_expl_20-10}
+    \caption{31 disjoint circles of radius 0.531, proving that there can't be
+      any solution of this cost for $k = 20$ and $z = 10$}
+  \end{figure}
+
+
+\section{Results}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{streaming_20-40}
+    \caption{Resulting clusters for $\alpha = 1.1$, $k = 20$ and $z = 40$}
+  \end{figure}
+
+  \subsection{Performances and solution quality}
+
+    The algorithm runs for only a few seconds with defaults parameters. I ran
+    tests for $\eta = 16$, $\beta = 8$, $\alpha = 4$, $k = 20$ and $z = 10$ up
+    to $50$.
+
+    Increasing radius by a factor $\alpha = 4$ in the algorithm seemed to be a
+    potential waste since the algorithm would search for a solution with a cost
+    proportional to a power of $4$. Thus, I also also ran the algorithm with
+    smaller values of $\alpha$ to check if we could get a more accurate
+    approximation without affecting too much the running time ($\alpha$ only
+    affects a first phase of the algorithm: it after reading a little part of
+    the graph, it usually found the radius it will output). Notice that with
+    this value of alpha nothing proves that the algorithm is correct.
+
+    Table~\ref{tab:results} shows results obtained by running the algorithm for
+    different parameters. \textit{Cost} is the cost of the clustering outputted
+    by the algorithm, notice that it is recomputed since the value $\eta r$
+    that the algorithm ensures can be pessimistic. \textit{Min opt} is the
+    lower bound we found for the cost of a solution of such parameters $n$ and
+    $z$. Finally, \textit{max ratio} is an upper bound to the approximation
+    ratio of the solution, obtained by computing $\frac{\text{cost}}{\text{min\
+    opt}}$.
+
+    For this variation of $z$ the running time of the algorithm doesn't seem to
+    explode, what we get and what was expected is that it would get get slower
+    at least proportionally to $z$ since most of the steps of the algorithms
+    are at least linear in the number of free points.
+
+    \begin{table}[h]
+      \centering
+      \begin{tabular}{c|c|c|c|c|c|c}
+        $k$ & $z$ & $\alpha$ & cost   & min opt & max ratio & time     \\\hline
+        20  & 10  & 1.1      & 0.8282 & 0.3125  & 2.6502    & 2.6360s  \\
+        20  & 50  & 1.1      & 0.6900 & 0.1992  & 3.4637    & 18.3627s \\
+        20  & 10  & 4        & 1.4160 & 0.3125  & 4.5312    & 1.9803s  \\
+        20  & 20  & 4        & 0.8843 & 0.2666  & 3.3169    & 2.4288s  \\
+        20  & 30  & 4        & 0.8665 & 0.2373  & 3.6514    & 2.4714s  \\
+        20  & 40  & 4        & 1.3749 & 0.2178  & 6.3136    & 2.6495s  \\
+        20  & 50  & 4        & 1.2991 & 0.1992  & 6.5210    & 3.1103s
+      \end{tabular}
+      \caption{Results for different values of $k$, $z$ and $\alpha$}
+      \label{tab:results}
+    \end{table}
+
+    \begin{figure}[h]
+      \label{plot:results}
+      \centering
+      \begin{subfigure}[b]{0.45\textwidth}
+        \resizebox{\textwidth}{!}{\input{images/plot_time.pgf}}
+      \end{subfigure}
+      \begin{subfigure}[b]{0.45\textwidth}
+        \resizebox{\textwidth}{!}{\input{images/plot_approx.pgf}}
+      \end{subfigure}
+      \caption{Evolution of running time and approximation bound (with $\alpha
+        = 1.1$)}
+    \end{figure}
+
+  \subsection{Using Euclidean distance}
+
+    When using Euclidean distance, I get a very bad bounding of the
+    approximation ratio. The reason for this bad ratio may be that the
+    algorithm finding a lower bound to the radius becomes inefficient since,
+    some of the circles may have up to 75\% of their surface out of the map
+    (c.f.  Figure~\ref{map:euclidean}), which can't append with the spheric
+    distance.
+
+    \begin{figure}[h]
+      \centering
+      \includegraphics[width=0.8\textwidth,resolution=30]{euclidian_20-50}
+      \caption{Clustering using Euclidean Distance, with $k = 20$ and $z = 50$}
+      \label{map:euclidean}
+    \end{figure}
+
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}
+
