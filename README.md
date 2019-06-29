@@ -3,6 +3,18 @@ Streaming k-Clusters with Outliers Approximation
 
 Implement k-cluster with outliers streaming algorithm.
 
+It contains the implementation of two algorithms from these papers:
+
+ - Section 3 from Algorithms for Facility Location Problems with Outliers,
+   Moses Charikar, Samir Khuller, David M. Mount, Giri Narasimhan
+   [acm](https://dl.acm.org/citation.cfm?id=365555).
+
+ - Algorithm 3.1 from Streaming Algorithms for k-Center Clustering with
+   Outliers and with Anonymity, Richard Matthew McCutchen, Samir Khuller
+   [springer](https://link.springer.com/chapter/10.1007/978-3-540-85363-3_14).
+   Where the requirement to an offline 4-approximation algorithm has been
+   replaced with the above algorithm.
+
 
 Building
 --------
